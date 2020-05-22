@@ -1,0 +1,20 @@
+{
+  "name": "alpha",
+  "description": "阿法迪官网",
+  "main": "index.js",
+  "authors": [
+    "ChenArno <517625126@qq.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.5.1"
+  }
+}
