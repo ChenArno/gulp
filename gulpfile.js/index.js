@@ -1,8 +1,11 @@
-const { series, watch, src } = require('gulp')
+const { series, watch, src, parallel, dest } = require('gulp')
 const { css } = require('./css')
+const { js } = require('./js')
 const { fileinclude } = require('./html')
 const browserSync = require('browser-sync').create();
 const gulpclean = require('gulp-clean')
+const wiredep = require('wiredep').stream
+const filter = require('gulp-filter')
 
 function clean(cb) {
 	src(['.tmp', 'dist'], { allowEmpty: true })
@@ -25,14 +28,42 @@ function serve(cb) {
 	});
 	cb()
 }
-
-function autowatch(cb) {
-	watch('src/styles/*.less', css)
-	watch('src/pages/*.html', fileinclude)
+const images = (cb) => {
+	src(['src/images/*.+(png| jpg | jpeg | gif | svg)', 'src/images/*/*.+(png| jpg | jpeg | gif | svg)'])
+		.pipe(dest('.tmp/images'))
+		.pipe(browserSync.reload({
+			stream: true
+		})
+		);
 	cb()
 }
 
+function autowatch(cb) {
+	watch('src/styles/*.less', css)
+	watch('sec/scriptes/*.js', js)
+	watch('src/pages/*.html', fileinclude)
+	cb()
+}
+// 将bower插件导入到html
+function html(cb) {
+	src('src/styles/*.less')
+		.pipe(filter(file => file.stat && file.stat.size))
+		.pipe(wiredep({
+			ignorePath: /^(\.\.\/)+/
+		}))
+		.pipe(dest('dist/styles'));
+
+	src('src/*.html')
+		.pipe(wiredep({  // 调用插件wiredep执行方法
+			exclude: ['bootstrap-less'],
+			ignorePath: /^(\.\.\/)*\.\./
+		}))
+		.pipe(dest('dist'))
+	cb()
+}
+
+exports.html = series(html)
+
 exports.serve = series(
-	clean,
-	series(serve, autowatch)
+	series(parallel(js, css, images), fileinclude, autowatch, serve)
 )
